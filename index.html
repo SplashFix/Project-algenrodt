@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Algenrdodt</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800&display=swap');
+
+    :root {
+      --fg: #ffffff;
+      --fg-dark: #000000;
+      --shadow: rgba(0, 0, 0, 0.25);
+      --accent: #00e5ff;
+    }
+
+    body {
+      position: relative;
+      isolation: isolate;
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      color: var(--fg);
+      background-color: #00001a; /* Dunkelblauer Hintergrund */
+      background-image: 
+        radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+        radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+        radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px),
+        radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
+      background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px; 
+      background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem 1rem;
+      box-sizing: border-box;
+    }
+
+    body.overlay-active {
+      overflow: hidden;
+    }
+
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 9999;
+      transition: opacity 1.5s ease-in-out;
+    }
+
+    #entry-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('Uncle Sam.png') no-repeat center 45%;
+      background-size: contain;
+      display: grid;
+      place-items: center;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      padding: 1rem;
+      transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+    }
+
+    .fireworks-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .rocket {
+      position: absolute;
+      bottom: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--color);
+      box-shadow: 0 0 8px var(--color), 0 0 20px var(--color);
+      animation: launch-rocket 1s ease-in forwards;
+    }
+
+    @keyframes launch-rocket {
+      0% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(var(--y-end));
+        opacity: 0;
+      }
+    }
+
+    .particle {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--color);
+      opacity: 0;
+      box-shadow: 0 0 8px var(--color);
+      animation: explode-particle 1.5s ease-out forwards;
+    }
+
+    @keyframes explode-particle {
+      0% {
+        transform: translate(0, 0);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(var(--x-peak), var(--y-peak));
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--x-final), var(--y-final)) scale(0.5);
+        opacity: 0;
+      }
+    }
+
+    #start-button {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      font-weight: 700;
+      color: var(--fg);
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      padding: 1.5rem 2.5rem;
+      border-radius: 20px;
+      cursor: pointer;
+      text-align: center;
+      animation: pulse 2s infinite;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px 0 var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #start-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 75%;
+      height: 100%;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0) 100%);
+      transform: skewX(-25deg);
+      transition: left 0.7s ease-in-out;
+    }
+
+    #start-button:hover::before {
+      left: 125%;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5); }
+      70% { transform: scale(1.05); box-shadow: 0 0 25px 15px rgba(255, 255, 255, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    }
+
+    .party-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .card {
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px) saturate(120%);
+      border-radius: 24px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px 0 var(--shadow);
+      margin-bottom: 1.5rem;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 10vw, 4rem);
+      font-weight: 800;
+      margin: 0 0 0.5rem;
+      letter-spacing: -2px;
+      text-shadow: 0 4px 15px var(--shadow);
+    }
+
+    p.subtitle {
+      font-size: clamp(1.2rem, 5vw, 1.4rem);
+      font-weight: 700;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .details-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      text-align: left;
+      justify-content: center;
+    }
+
+    .detail-item h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 0.25rem;
+      color: var(--fg);
+      text-transform: uppercase;
+    }
+
+    .detail-item p {
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin: 0;
+    }
+
+    .pricelist h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--fg);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .pricelist h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--fg);
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 0.3rem;
+    }
+    
+    .pricelist h3:first-of-type {
+        margin-top: 0;
+    }
+
+    .pricelist ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+    }
+
+    .pricelist li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 1.1rem;
+    }
+
+    .map-container iframe {
+      width: 100%;
+      height: 350px;
+      border: 0;
+      border-radius: 16px;
+    }
+
+    .audio-control {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--fg);
+      font-size: 1.5rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      backdrop-filter: blur(20px);
+      transition: transform 0.2s ease;
+      z-index: 10;
+    }
+
+    .audio-control:hover { transform: scale(1.1); }
+
+    .emoji-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .emoji {
+      position: absolute;
+      font-size: 3rem;
+      opacity: 0.5;
+      animation: float-emoji 12s ease-in-out infinite;
+      user-select: none;
+    }
+
+    @keyframes float-emoji {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(40px) rotate(25deg); }
+    }
+
+        @media (max-width: 768px) {
+
+          body { 
+
+            padding: 1rem; 
+
+          }
+
+          h1 {
+
+            letter-spacing: -1px;
+
+            font-size: clamp(2.2rem, 10vw, 3rem);
+
+          }
+
+          p.subtitle {
+
+            font-size: clamp(1rem, 5vw, 1.2rem);
+
+          }
+
+          .card { 
+
+            padding: 1rem; 
+
+            margin-bottom: 1rem;
+
+          }
+
+          .content-grid { 
+
+            grid-template-columns: 1fr; 
+
+            gap: 1.5rem;
+
+          }
+
+          .details-grid {
+
+            gap: 1.5rem;
+
+          }
+
+          .hero-card {
+
+            min-height: auto;
+
+            padding-top: 2rem;
+
+            padding-bottom: 2rem;
+
+          }
+
+          .map-container iframe {
+
+            height: 250px;
+
+          }
+
+          #start-button {
+
+            padding: 1.2rem 1.8rem;
+
+          }
+
+          .pricelist li {
+
+            padding: 0.75rem 0;
+
+          }
+
+          .audio-control {
+
+            width: 45px;
+
+            height: 45px;
+
+            font-size: 1.2rem;
+
+          }
+
+        }
+
+      </style>
+
+    </head>
+
+    <body class="overlay-active">
+
+    
+
+      <div id="preloader"></div>
+
+    
+
+      <div id="entry-overlay">
+
+        <div class="fireworks-container"></div>
+
+        <button id="start-button">PARTY STARTEN</button>
+
+      </div>
+
+    
+
+      <audio id="bg-audio" preload="auto" style="display:none"></audio>
+
+    
+
+      <div class="emoji-background" id="emoji-container"></div>
+
+    
+
+      <div class="party-container">
+
+        <div class="card hero-card">
+
+          <h1>AMERICAN SUMMERBREAK</h1>
+
+          <p class="subtitle">Die Party ist hier. Let's vibe.</p>
+
+        </div>
+
+    
+
+        <div class="card">
+
+          <div class="content-grid">
+
+            <div class="details-grid">
+
+              <div class="detail-item">
+
+                <h2>Wann</h2>
+
+                <p>Freitag, 7. August</p>
+
+                <p>Ab 19:00 Uhr</p>
+
+              </div>
+
+              <div class="detail-item">
+
+                <h2>Wo</h2>
+
+                <p>Dreispitz, Algenrodt</p>
+
+                <p>Bus 803/830 bis Dreschplatz, dann hochlaufen.</p>
+
+              </div>
+
+              <div class="detail-item">
+
+                <h2>Eintritt</h2>
+
+                <p>FREI</p>
+
+                <p>Nur mit Vibe-Check</p>
+
+              </div>
+
+            </div>
+
+            <div class="pricelist">
+
+              <h2>Preise</h2>
+
+              <h3>Alkoholische Getränke</h3>
+
+              <ul>
+
+                <li><span>Kirner Stubbi</span><span>2,50€</span></li>
+
+                <li><span>Mixery Energy Ice</span><span>2,50€</span></li>
+
+                <li><span>Mixery Bier Cola</span><span>2,50€</span></li>
+
+                <li><span>Eppler-Cola</span><span>2,50€</span></li>
+
+                <li><span>Vodka Shot</span><span>1,00€</span></li>
+
+                <li><span>Vodka E</span><span>2,50€</span></li>
+
+              </ul>
+
+              <h3>non-Alkoholische Getränke</h3>
+
+              <ul>
+
+                <li><span>Cola, Sprite, Fanta (350ml)</span><span>2,00€</span></li>
+
+                <li><span>Wasser</span><span>1,50€</span></li>
+
+              </ul>
+
+              <h3>Snacks</h3>
+
+              <ul>
+
+                <li><span>Chips</span><span>2,00€</span></li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+        </div>
+
+    
+
+        <div class="card map-container">
+
+          <iframe 
+
+            src="https://maps.google.com/maps?q=49.722099,7.276717&hl=de&z=15&output=embed"
+
+            allowfullscreen="" 
+
+            loading="lazy" 
+
+            referrerpolicy="no-referrer-when-downgrade">
+
+          </iframe>
+
+        </div>
+
+      </div>
+
+    
+
+      <button id="audio-toggle" class="audio-control" style="display: none;">🔊</button>
+
+    
+
+      <script>
+
+        let audio;
+
+        const toggleBtn = document.getElementById('audio-toggle');
+
+        const startBtn = document.getElementById('start-button');
+
+        const entryOverlay = document.getElementById('entry-overlay');
+
+    
+
+        // --- SONG LISTE ---
+
+        // Füge hier deine Songs hinzu.
+
+        // Jeder Song ist ein Objekt mit 'src' (Dateiname) und 'startTime' (in Sekunden).
+
+        const songs = [
+
+          { src: 'Heads Will Roll (A-Trak Remix).mp3', startTime: 55 },
+
+          { src: 'David Guetta - Where Them Girls At (Audio).mp3', startTime: 0 },
+
+          { src: 'Sexy Bitch (feat. Akon).mp3', startTime: 0 },
+
+          { src: 'Starships.mp3', startTime: 0 },
+
+          { src: 'Hotel Room Service.mp3', startTime: 15 },
+
+          
+
+        ];
+
+        // --- ENDE SONG LISTE ---
+
+    
+
+        function createExplosion(x, y, color) {
+
+          const container = document.querySelector('.fireworks-container');
+
+          const particleCount = 60;
+
+          
+
+          for (let i = 0; i < particleCount; i++) {
+
+            const particle = document.createElement('div');
+
+            particle.classList.add('particle');
+
+            
+
+            particle.style.setProperty('--color', color);
+
+            particle.style.left = `${x}px`;
+
+            particle.style.top = `${y}px`;
+
+            
+
+            const angle = Math.random() * 360;
+
+            const distance = Math.random() * 150 + 80;
+
+            const gravityFall = 80;
+
+    
+
+            const xEnd = Math.cos(angle * Math.PI / 180) * distance;
+
+            const yEndBurst = Math.sin(angle * Math.PI / 180) * distance;
+
+            
+
+            const xFinal = xEnd * 1.1;
+
+            const yFinal = yEndBurst + gravityFall;
+
+    
+
+            particle.style.setProperty('--x-peak', `${xEnd}px`);
+
+            particle.style.setProperty('--y-peak', `${yEndBurst}px`);
+
+            particle.style.setProperty('--x-final', `${xFinal}px`);
+
+            particle.style.setProperty('--y-final', `${yFinal}px`);
+
+            
+
+            container.appendChild(particle);
+
+            
+
+            setTimeout(() => {
+
+              particle.remove();
+
+            }, 1500);
+
+          }
+
+        }
+
+    
+
+        function launchRocket(xStart, yExplode, color) {
+
+          const container = document.querySelector('.fireworks-container');
+
+          const rocket = document.createElement('div');
+
+          rocket.classList.add('rocket');
+
+          rocket.style.left = `${xStart}px`;
+
+          rocket.style.setProperty('--color', color);
+
+    
+
+          const travelDistance = window.innerHeight - yExplode;
+
+          rocket.style.setProperty('--y-end', `-${travelDistance}px`);
+
+    
+
+          rocket.addEventListener('animationend', () => {
+
+            rocket.remove();
+
+            createExplosion(xStart, yExplode, color);
+
+          });
+
+    
+
+          container.appendChild(rocket);
+
+        }
+
+    
+
+        function launchFireworkShow() {
+
+          const showDuration = 2200;
+
+          const explosionsPerSecond = 2;
+
+          const interval = 1000 / explosionsPerSecond;
+
+          let time = 0;
+
+          const colors = ['#ffc0cb', '#ffffff', '#2ecc40', '#ffdc00', '#ff4136', '#0074d9', '#b10dc9', '#ff851b'];
+
+    
+
+          const intervalId = setInterval(() => {
+
+            time += interval;
+
+            if (time > showDuration) {
+
+              clearInterval(intervalId);
+
+              return;
+
+            }
+
+            
+
+            const isMobile = window.innerWidth <= 768;
+
+            const xStart = isMobile 
+
+              ? Math.random() * (window.innerWidth * 0.6) + (window.innerWidth * 0.2)
+
+              : Math.random() * window.innerWidth * 0.8 + window.innerWidth * 0.1;
+
+            
+
+            // Fly higher: Explode in top 10% to 50% of the screen
+
+            const yExplode = Math.random() * (window.innerHeight * 0.4) + (window.innerHeight * 0.1);
+
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            
+
+            launchRocket(xStart, yExplode, color);
+
+          }, interval);
+
+        }
+
+    
+
+        function startParty() {
+
+          launchFireworkShow();
+
+          startBtn.style.visibility = 'hidden';
+
+    
+
+          setTimeout(() => {
+
+            document.body.classList.remove('overlay-active');
+
+            entryOverlay.style.opacity = '0';
+
+            entryOverlay.style.visibility = 'hidden';
+
+    
+
+            const randomSong = songs[Math.floor(Math.random() * songs.length)];
+
+            audio = document.getElementById('bg-audio');
+
+            audio.src = randomSong.src;
+
+            audio.loop = true;
+
+            const startAt = randomSong.startTime || 0;
+
+    
+
+            const seekAndPlay = () => {
+
+              try { audio.currentTime = startAt; } catch (e) {}
+
+              const playPromise = audio.play();
+
+              if (playPromise !== undefined) {
+
+                playPromise.then(() => {
+
+                  toggleBtn.style.display = 'grid';
+
+                  toggleBtn.textContent = '🔊';
+
+                }).catch(error => {
+
+                  console.error('Playback failed:', error);
+
+                  toggleBtn.style.display = 'grid';
+
+                  toggleBtn.textContent = '🔇';
+
+                });
+
+              }
+
+            };
+
+    
+
+            audio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+
+            audio.load();
+
+          }, 2800);
+
+        }
+
+    
+
+        // Use a single, reliable event for the user gesture
+
+        startBtn.addEventListener('click', startParty, { once: true });
+
+    
+
+        toggleBtn.addEventListener('click', (e) => {
+
+          if (!audio) return;
+
+          e.stopPropagation();
+
+          audio.muted = !audio.muted;
+
+          toggleBtn.textContent = audio.muted ? '🔇' : '🔊';
+
+        });
+
+    
+
+        // Emoji Generator
+
+        const emojiContainer = document.getElementById('emoji-container');
+
+        const emojis = ['🎉', '🔥', '👽', '✨', '🚀', '🤯', '😎', '🪩'];
+
+    
+
+        function createEmojis() {
+
+          const isMobile = window.innerWidth <= 768;
+
+          const emojiCount = isMobile ? 10 : 20;
+
+    
+
+          for (let i = 0; i < emojiCount; i++) {
+
+            const emoji = document.createElement('div');
+
+            emoji.classList.add('emoji');
+
+            emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+            emoji.style.top = `${Math.random() * 100}%`;
+
+            emoji.style.left = `${Math.random() * 100}%`;
+
+            emoji.style.animationDelay = `${Math.random() * -12}s`;
+
+            emojiContainer.appendChild(emoji);
+
+          }
+
+        }
+
+    
+
+        window.addEventListener('load', () => {
+
+          window.scrollTo(0, 0);
+
+          const preloader = document.getElementById('preloader');
+
+          if (preloader) {
+
+            preloader.style.opacity = '0';
+
+            setTimeout(() => {
+
+              preloader.style.display = 'none';
+
+            }, 1500); // Match CSS transition
+
+          }
+
+        });
+
+    
+
+        document.addEventListener('DOMContentLoaded', createEmojis);
+
+      </script>
+
+</body>
+</html>
