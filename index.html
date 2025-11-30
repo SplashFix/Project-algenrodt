@@ -759,69 +759,113 @@
 
         function startParty() {
 
-          launchFireworkShow();
+                    launchFireworkShow();
 
-          startBtn.style.visibility = 'hidden';
+                    startBtn.style.visibility = 'hidden';
 
-    
+          
 
-          setTimeout(() => {
+                    setTimeout(() => {
 
-            document.body.classList.remove('overlay-active');
+                      document.body.classList.remove('overlay-active');
 
-            entryOverlay.style.opacity = '0';
+                      entryOverlay.style.opacity = '0';
 
-            entryOverlay.style.visibility = 'hidden';
+                      entryOverlay.style.visibility = 'hidden';
 
-    
+          
 
-            const randomSong = songs[Math.floor(Math.random() * songs.length)];
+                      const lastPlayedSongSrc = localStorage.getItem('lastPlayedSong');
 
-            audio = document.getElementById('bg-audio');
+                      let songToPlay;
 
-            audio.src = randomSong.src;
+          
 
-            audio.loop = true;
+                      if (!lastPlayedSongSrc) {
 
-            const startAt = randomSong.startTime || 0;
+                        // First visit, play "Heads Will Roll"
 
-    
+                        songToPlay = songs.find(song => song.src === 'Heads Will Roll (A-Trak Remix).mp3');
 
-            const seekAndPlay = () => {
+                        if (!songToPlay) {
 
-              try { audio.currentTime = startAt; } catch (e) {}
+                          // Fallback if "Heads Will Roll" is not found (shouldn't happen with current list)
 
-              const playPromise = audio.play();
+                          songToPlay = songs[Math.floor(Math.random() * songs.length)];
 
-              if (playPromise !== undefined) {
+                        }
 
-                playPromise.then(() => {
+                      } else {
 
-                  toggleBtn.style.display = 'grid';
+                        // Subsequent visits, try to play a different random song
 
-                  toggleBtn.textContent = '🔊';
+                        const availableSongs = songs.filter(song => song.src !== lastPlayedSongSrc);
 
-                }).catch(error => {
+                        if (availableSongs.length > 0) {
 
-                  console.error('Playback failed:', error);
+                          songToPlay = availableSongs[Math.floor(Math.random() * availableSongs.length)];
 
-                  toggleBtn.style.display = 'grid';
+                        } else {
 
-                  toggleBtn.textContent = '🔇';
+                          // If only one song, or all other songs were the last played, play any song
 
-                });
+                          songToPlay = songs[Math.floor(Math.random() * songs.length)];
 
-              }
+                        }
 
-            };
+                      }
 
-    
+          
 
-            audio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+                      audio = document.getElementById('bg-audio');
 
-            audio.load();
+                      audio.src = songToPlay.src;
 
-          }, 2800);
+                      audio.loop = true;
+
+                      const startAt = songToPlay.startTime || 0;
+
+          
+
+                      localStorage.setItem('lastPlayedSong', songToPlay.src); // Store the current song
+
+          
+
+                      const seekAndPlay = () => {
+
+                        try { audio.currentTime = startAt; } catch (e) { console.error('Error setting currentTime:', e); }
+
+                        const playPromise = audio.play();
+
+                        if (playPromise !== undefined) {
+
+                          playPromise.then(() => {
+
+                            toggleBtn.style.display = 'grid';
+
+                            toggleBtn.textContent = '🔊';
+
+                          }).catch(error => {
+
+                            console.error('Playback failed:', error);
+
+                            toggleBtn.style.display = 'grid';
+
+                            toggleBtn.textContent = '🔇';
+
+                          });
+
+                        }
+
+                      };
+
+          
+
+                      audio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+
+                      audio.load();
+
+                    }, 2800);
 
         }
 
